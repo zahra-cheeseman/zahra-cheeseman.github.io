@@ -1,0 +1,25 @@
+---
+// Email signup. Works with any newsletter tool that gives you a form "action" URL
+// (Buttondown, Substack, Mailchimp…). Set it in src/site.config.ts.
+import { SITE } from '../site.config';
+---
+{SITE.newsletterAction && (
+  <section class="wrap subscribe">
+    <div class="rule inner">
+      <h2>One email per ski day. Best moment, worst fall, the numbers.</h2>
+      <form action={SITE.newsletterAction} method="post" target="_blank">
+        <label for="email" class="sr-only">Email address</label>
+        <input id="email" name="email" type="email" required placeholder="you@example.com" autocomplete="email" />
+        <button class="btn" type="submit">Subscribe →</button>
+      </form>
+    </div>
+  </section>
+)}
+
+<style>
+  .subscribe { margin-top: 104px; }
+  .inner { padding-top: 32px; display: grid; gap: 20px; }
+  h2 { max-width: 720px; }
+  form { display: flex; gap: 8px; flex-wrap: wrap; max-width: 560px; }
+  input { flex: 1; min-width: 220px; font: inherit; padding: 12px 14px; border: 1px solid var(--ink); border-radius: 0; }
+</style>

@@ -1,0 +1,98 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Stats from '../components/Stats.astro';
+import Subscribe from '../components/Subscribe.astro';
+import { SITE } from '../site.config';
+import { getDays, totals, url, fmt, fmtDate, resortName } from '../lib/data';
+import { photosIn } from '../lib/photos';
+
+const days = await getDays();
+const latest = days[0];
+const cover = latest ? (await photosIn(latest.entry.id))[0] : undefined;
+const offPiste = (await getCollection('offPiste')).sort((a, b) => b.data.date.getTime() - a.data.date.getTime()).slice(0, 3);
+---
+<Base>
+  <section class="wrap hero">
+    <p class="label">{SITE.season}</p>
+    <h1>{SITE.headline}</h1>
+    <p class="lede">{SITE.intro}</p>
+  </section>
+
+  <section class="wrap">
+    <a href={url('/numbers')} class="stats-link" aria-label="See all the numbers">
+      <Stats
+        size={96}
+        items={[
+          { label: 'Ski:IQ', value: totals.skiIQ, note: totals.skiIQGain ? `+${totals.skiIQGain} since day 1` : 'starting point' },
+          { label: 'Days on snow', value: totals.days, note: 'so far' },
+          { label: 'Falls', value: totals.falls, note: 'all graceful' },
+          { label: 'Top speed', value: fmt(totals.topSpeedKmh), unit: 'km/h', note: 'not entirely on purpose' },
+        ]}
+      />
+    </a>
+    {SITE.useDemoData && <p class="label">// demo numbers: set useDemoData to false in src/site.config.ts</p>}
+  </section>
+
+  {latest && (
+    <section class="wrap block">
+      <div class="head">
+        <h2>Latest day</h2>
+        <a href={url('/days')} class="mono small underline">All ski days →</a>
+      </div>
+      <a href={url(`/days/${latest.entry.id}`)} class="latest rule">
+        <div>
+          <div class="label">Day {latest.n} · {fmtDate(latest.entry.id)} · {resortName(latest.entry.data.location)}</div>
+          <div class="title">{latest.entry.data.title}</div>
+          <p class="summary">{latest.entry.data.summary}</p>
+          <span class="btn">Read day {latest.n} →</span>
+        </div>
+        {cover && <img src={cover.thumb} alt={cover.alt} />}
+      </a>
+    </section>
+  )}
+
+  {offPiste.length > 0 && (
+    <section class="wrap block off">
+      <div>
+        <h2>Off-piste</h2>
+        <p class="lede small-lede">Innsbruck, minus the skiing. Mostly Kaiserschmarrn.</p>
+      </div>
+      <ul>
+        {offPiste.map((p) => (
+          <li>
+            <a href={url(`/off-piste/${p.id}`)}>
+              <span>{p.data.title}</span>
+              <span class="label">{p.data.category} · {p.data.date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' })}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  <Subscribe />
+
+  <style>
+    .hero { padding-block: 88px 72px; }
+    .hero h1 { margin-top: 20px; max-width: 1000px; }
+    .hero .lede { margin: 28px 0 0; }
+    .stats-link:hover { color: inherit; }
+    .block { margin-top: 104px; }
+    .head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+    .small { font-size: 13px; }
+    .latest { display: grid; grid-template-columns: 7fr 5fr; gap: 32px; padding-top: 32px; }
+    .latest:hover { color: inherit; }
+    .latest:hover .title { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 6px; }
+    .title { font-weight: 600; font-size: clamp(40px, 5.5vw, 64px); line-height: 0.95; letter-spacing: -0.04em; margin-top: 12px; }
+    .summary { font-size: 19px; color: #333; max-width: 560px; margin: 20px 0 24px; }
+    .latest img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+    .off { display: grid; grid-template-columns: 5fr 7fr; gap: 32px; }
+    .small-lede { font-size: 19px; margin-top: 8px; }
+    .off ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--ink); }
+    .off li a { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--line); font-size: 22px; font-weight: 600; letter-spacing: -0.02em; }
+    @media (max-width: 760px) {
+      .latest, .off { grid-template-columns: 1fr; }
+    }
+  </style>
+</Base>

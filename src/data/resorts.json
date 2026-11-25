@@ -1,0 +1,50 @@
+{
+  "muttereralm": {
+    "name": "Muttereralm",
+    "lat": 47.205,
+    "lng": 11.364,
+    "label": "above"
+  },
+  "axamer-lizum": {
+    "name": "Axamer Lizum",
+    "lat": 47.194,
+    "lng": 11.301,
+    "label": "left"
+  },
+  "patscherkofel": {
+    "name": "Patscherkofel",
+    "lat": 47.209,
+    "lng": 11.461
+  },
+  "glungezer": {
+    "name": "Glungezer",
+    "lat": 47.24,
+    "lng": 11.53
+  },
+  "nordkette": {
+    "name": "Nordkette",
+    "lat": 47.307,
+    "lng": 11.384
+  },
+  "schlick-2000": {
+    "name": "Schlick 2000",
+    "lat": 47.153,
+    "lng": 11.302,
+    "label": "left"
+  },
+  "kuehtai": {
+    "name": "Kühtai",
+    "lat": 47.213,
+    "lng": 11.02
+  },
+  "stubai-glacier": {
+    "name": "Stubai Glacier",
+    "lat": 46.992,
+    "lng": 11.118
+  },
+  "hintertux": {
+    "name": "Hintertux",
+    "lat": 47.078,
+    "lng": 11.682
+  }
+}

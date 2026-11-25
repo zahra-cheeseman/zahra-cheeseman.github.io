@@ -1,0 +1,52 @@
+---
+// The list of ski days: day number, title, one-liner, Ski:IQ.
+import { url, fmtDate, resortName, sessions, type Day } from '../lib/data';
+interface Props { days: Day[] }
+const { days } = Astro.props;
+const prevIQ = (date: string) => {
+  const i = sessions.findIndex((s) => s.date === date);
+  return i > 0 ? sessions[i - 1].skiIQ : undefined;
+};
+---
+<ol class="days rule">
+  {days.map(({ entry, n, session }) => {
+    const before = prevIQ(entry.id);
+    const delta = session && before !== undefined ? session.skiIQ - before : undefined;
+    return (
+      <li>
+        <a href={url(`/days/${entry.id}`)}>
+          <span class="big n">{n}</span>
+          <span class="main">
+            <span class="label">{fmtDate(entry.id)} · {resortName(entry.data.location)}</span>
+            <span class="title">{entry.data.title}</span>
+            <span class="summary">{entry.data.summary}</span>
+          </span>
+          {session && (
+            <span class="iq">
+              <span class="big">{session.skiIQ}</span>
+              <span class="label">Ski:IQ {delta !== undefined && (delta >= 0 ? `+${delta}` : delta)}</span>
+            </span>
+          )}
+        </a>
+      </li>
+    );
+  })}
+</ol>
+
+<style>
+  .days { list-style: none; margin: 0; padding: 0; }
+  li { border-bottom: 1px solid var(--line); }
+  a { display: grid; grid-template-columns: 80px minmax(0, 1fr) 140px; gap: 32px; align-items: center; padding: 28px 0; }
+  .n { font-size: 44px; }
+  .main { display: grid; gap: 6px; }
+  .title { font-weight: 600; font-size: clamp(26px, 3.4vw, 40px); line-height: 1.05; letter-spacing: -0.035em; }
+  .summary { font-size: 18px; color: #444; }
+  .iq { text-align: right; display: grid; gap: 4px; }
+  .iq .big { font-size: 56px; }
+  @media (max-width: 700px) {
+    a { grid-template-columns: 52px minmax(0, 1fr); gap: 16px; }
+    .n { font-size: 32px; }
+    .iq { grid-column: 2; text-align: left; display: flex; gap: 10px; align-items: baseline; }
+    .iq .big { font-size: 32px; }
+  }
+</style>

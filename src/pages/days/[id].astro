@@ -1,0 +1,85 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Stats from '../../components/Stats.astro';
+import Photos from '../../components/Photos.astro';
+import Subscribe from '../../components/Subscribe.astro';
+import { getDays, url, fmt, fmtDate, resortName, type Day } from '../../lib/data';
+import { photosIn } from '../../lib/photos';
+
+export async function getStaticPaths() {
+  const days = (await getDays()).slice().reverse(); // oldest first
+  return days.map((day, i) => ({
+    params: { id: day.entry.id },
+    props: { day, prev: days[i - 1] ?? null, next: days[i + 1] ?? null },
+  }));
+}
+
+const { day, prev, next } = Astro.props as { day: Day; prev: Day | null; next: Day | null };
+const { entry, n, session } = day;
+const { Content } = await render(entry);
+const photos = await photosIn(entry.id);
+---
+<Base title={`Day ${n}: ${entry.data.title}`} description={entry.data.summary} image={photos[0]?.thumb}>
+  <article class="wrap narrow">
+    <a href={url('/days')} class="label back">← All ski days</a>
+    <div class="label date">Day {n} · {fmtDate(entry.id, 'long')}</div>
+    <h1>{entry.data.title}</h1>
+
+    <dl class="facts">
+      <div><dt class="label">Location</dt><dd>{resortName(entry.data.location)}</dd></div>
+      {entry.data.temp && <div><dt class="label">Temperature</dt><dd>{entry.data.temp}</dd></div>}
+      {entry.data.weather && <div><dt class="label">Weather</dt><dd>{entry.data.weather}</dd></div>}
+    </dl>
+
+    {session && (
+      <div class="numbers">
+        <Stats
+          size={48}
+          items={[
+            { label: 'Ski:IQ', value: session.skiIQ },
+            { label: 'Runs', value: session.runs },
+            { label: 'Vertical', value: fmt(session.verticalM), unit: 'm' },
+            { label: 'Top speed', value: fmt(session.topSpeedKmh, 1), unit: 'km/h' },
+            { label: 'Falls', value: session.falls },
+          ]}
+        />
+        <a href={url(`/numbers#day-${entry.id}`)} class="mono underline data-link">See all the data →</a>
+      </div>
+    )}
+
+    <div class="text"><Content /></div>
+  </article>
+
+  {photos.length > 0 && (
+    <section class="wrap photos"><Photos photos={photos} /></section>
+  )}
+
+  <nav class="wrap" aria-label="Other days"><div class="pager rule">
+    {prev
+      ? <a href={url(`/days/${prev.entry.id}`)} class="other">← Day {prev.n}: {prev.entry.data.title}</a>
+      : <span class="label">← No previous day. This is the beginning.</span>}
+    {next && <a href={url(`/days/${next.entry.id}`)} class="other right">Day {next.n}: {next.entry.data.title} →</a>}
+  </div></nav>
+
+  <Subscribe />
+
+  <style>
+    article { padding-top: 56px; }
+    .back { font-size: 13px; }
+    .date { font-size: 13px; margin-top: 40px; }
+    h1 { font-size: clamp(44px, 7vw, 80px); line-height: 0.95; margin-top: 10px; }
+    .facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin: 36px 0 0; border-top: 1px solid var(--ink); padding-top: 16px; }
+    .facts dd { margin: 0; font-weight: 600; font-size: 22px; letter-spacing: -0.02em; }
+    .numbers { margin-top: 32px; }
+    .data-link { display: inline-block; margin-top: 16px; font-size: 13px; }
+    .text { font-size: 20px; line-height: 1.65; color: #222; margin-top: 48px; }
+    .text :global(p) { margin: 0 0 22px; }
+    .text :global(img) { margin: 32px 0; }
+    .photos { margin-top: 72px; }
+    .pager { margin-top: 88px; padding-top: 24px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .other { font-weight: 600; font-size: clamp(20px, 2.4vw, 28px); letter-spacing: -0.03em; }
+    .right { text-align: right; margin-left: auto; }
+    @media (max-width: 600px) { .facts { grid-template-columns: 1fr 1fr; } }
+  </style>
+</Base>

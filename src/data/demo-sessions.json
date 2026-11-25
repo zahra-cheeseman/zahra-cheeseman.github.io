@@ -1,0 +1,134 @@
+[
+ {
+  "date": "2026-11-25",
+  "resort": "muttereralm",
+  "skiIQ": 77,
+  "runs": 6,
+  "verticalM": 219,
+  "topSpeedKmh": 21.4,
+  "turns": 143,
+  "timeOnSnowMin": 263,
+  "falls": 8
+ },
+ {
+  "date": "2026-11-28",
+  "resort": "muttereralm",
+  "skiIQ": 84,
+  "runs": 9,
+  "verticalM": 602,
+  "topSpeedKmh": 25.9,
+  "turns": 234,
+  "timeOnSnowMin": 137,
+  "falls": 7
+ },
+ {
+  "date": "2026-12-02",
+  "resort": "patscherkofel",
+  "skiIQ": 93,
+  "runs": 9,
+  "verticalM": 881,
+  "topSpeedKmh": 30.1,
+  "turns": 214,
+  "timeOnSnowMin": 192,
+  "falls": 4
+ },
+ {
+  "date": "2026-12-06",
+  "resort": "axamer-lizum",
+  "skiIQ": 95,
+  "runs": 9,
+  "verticalM": 1309,
+  "topSpeedKmh": 33.0,
+  "turns": 218,
+  "timeOnSnowMin": 207,
+  "falls": 5
+ },
+ {
+  "date": "2026-12-12",
+  "resort": "stubai-glacier",
+  "skiIQ": 100,
+  "runs": 9,
+  "verticalM": 1591,
+  "topSpeedKmh": 35.9,
+  "turns": 231,
+  "timeOnSnowMin": 178,
+  "falls": 3
+ },
+ {
+  "date": "2026-12-19",
+  "resort": "glungezer",
+  "skiIQ": 104,
+  "runs": 12,
+  "verticalM": 2196,
+  "topSpeedKmh": 40.0,
+  "turns": 284,
+  "timeOnSnowMin": 259,
+  "falls": 3
+ },
+ {
+  "date": "2026-12-27",
+  "resort": "nordkette",
+  "skiIQ": 107,
+  "runs": 12,
+  "verticalM": 2429,
+  "topSpeedKmh": 45.1,
+  "turns": 300,
+  "timeOnSnowMin": 138,
+  "falls": 2
+ },
+ {
+  "date": "2027-01-04",
+  "resort": "kuehtai",
+  "skiIQ": 113,
+  "runs": 12,
+  "verticalM": 2804,
+  "topSpeedKmh": 47.2,
+  "turns": 269,
+  "timeOnSnowMin": 134,
+  "falls": 2
+ },
+ {
+  "date": "2027-01-10",
+  "resort": "axamer-lizum",
+  "skiIQ": 115,
+  "runs": 12,
+  "verticalM": 2825,
+  "topSpeedKmh": 48.2,
+  "turns": 299,
+  "timeOnSnowMin": 133,
+  "falls": 2
+ },
+ {
+  "date": "2027-01-17",
+  "resort": "hintertux",
+  "skiIQ": 119,
+  "runs": 15,
+  "verticalM": 3168,
+  "topSpeedKmh": 52.7,
+  "turns": 346,
+  "timeOnSnowMin": 294,
+  "falls": 1
+ },
+ {
+  "date": "2027-01-24",
+  "resort": "schlick-2000",
+  "skiIQ": 125,
+  "runs": 14,
+  "verticalM": 3526,
+  "topSpeedKmh": 53.7,
+  "turns": 330,
+  "timeOnSnowMin": 237,
+  "falls": 0
+ },
+ {
+  "date": "2027-02-01",
+  "resort": "axamer-lizum",
+  "skiIQ": 128,
+  "runs": 18,
+  "verticalM": 3955,
+  "topSpeedKmh": 63.0,
+  "turns": 417,
+  "timeOnSnowMin": 287,
+  "falls": 0
+ }
+]

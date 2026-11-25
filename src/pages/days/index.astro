@@ -1,0 +1,27 @@
+---
+import Base from '../../layouts/Base.astro';
+import DayList from '../../components/DayList.astro';
+import { getDays } from '../../lib/data';
+
+const days = await getDays();
+const resorts = new Set(days.map((d) => d.entry.data.location)).size;
+const falls = days.reduce((t, d) => t + (d.session?.falls ?? 0), 0);
+---
+<Base title="Ski days" description="One entry per day on snow.">
+  <section class="wrap head">
+    <div>
+      <h1>Ski days</h1>
+      <p class="lede">One entry per day on snow. Newest first, most dignified last.</p>
+    </div>
+    <p class="label">{days.length} day{days.length === 1 ? '' : 's'} · {resorts} resort{resorts === 1 ? '' : 's'} · {falls} falls</p>
+  </section>
+  <section class="wrap">
+    <DayList days={days} />
+  </section>
+
+  <style>
+    .head { padding-block: 80px 48px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 24px; }
+    .lede { margin: 20px 0 0; }
+    .label { margin: 0; font-size: 13px; }
+  </style>
+</Base>

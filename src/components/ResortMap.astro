@@ -1,0 +1,51 @@
+---
+// A simple black-and-white map of the resorts around Innsbruck, drawn from the
+// coordinates in src/data/resorts.json. Filled dot = skied there (bigger = more days).
+// Hollow dot = in resorts.json but not skied yet.
+// Labels overlapping? Add "label": "left" | "right" | "above" | "below" to that resort in resorts.json.
+import { resorts, resortVisits } from '../lib/data';
+
+const W = 1000, H = 540, PAD = 60;
+const all = Object.entries(resorts);
+const home = { name: 'Innsbruck', lat: 47.2654, lng: 11.3928 };
+const lats = [...all.map(([, r]) => r.lat), home.lat];
+const lngs = [...all.map(([, r]) => r.lng), home.lng];
+const [minLat, maxLat, minLng, maxLng] = [Math.min(...lats), Math.max(...lats), Math.min(...lngs), Math.max(...lngs)];
+const x = (lng: number) => PAD + ((lng - minLng) / (maxLng - minLng)) * (W - PAD * 2);
+const y = (lat: number) => PAD + ((maxLat - lat) / (maxLat - minLat)) * (H - PAD * 2);
+
+const visits = new Map(resortVisits.map((v) => [v.key, v.days]));
+const dots = all.map(([key, r]) => {
+  const days = visits.get(key) ?? 0;
+  const cx = x(r.lng), cy = y(r.lat);
+  const side = r.label ?? (cx < W - 200 ? 'right' : 'left');
+  return { key, name: r.name, days, cx, cy, r: days ? 8 + days * 4 : 8, side };
+});
+const hx = x(home.lng), hy = y(home.lat);
+---
+<figure class="map">
+  <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Map of ski resorts around Innsbruck. Skied: ${resortVisits.map((v) => `${v.name} (${v.days})`).join(', ')}`}>
+    <rect x={hx - 9} y={hy - 9} width="18" height="18" fill="#111" />
+    <text x={hx + 16} y={hy - 12} class="home">Innsbruck (home)</text>
+    {dots.map((d) => (
+      <g>
+        <circle cx={d.cx} cy={d.cy} r={d.r} fill={d.days ? '#111' : '#fff'} stroke="#111" stroke-width="2" />
+        <text
+          x={d.side === 'right' ? d.cx + d.r + 8 : d.side === 'left' ? d.cx - d.r - 8 : d.cx}
+          y={d.side === 'below' ? d.cy + d.r + 18 : d.side === 'above' ? d.cy - d.r - 8 : d.cy + 5}
+          text-anchor={d.side === 'right' ? 'start' : d.side === 'left' ? 'end' : 'middle'}
+          class={d.days ? 'on' : 'off'}
+        >{d.name}{d.days ? ` · ${d.days}` : ''}</text>
+      </g>
+    ))}
+  </svg>
+</figure>
+
+<style>
+  .map { margin: 0; }
+  svg { width: 100%; height: auto; display: block; font-family: var(--mono); }
+  text { font-size: 14px; }
+  .home { font-size: 14px; fill: #111; }
+  .on { fill: #111; }
+  .off { fill: #888; font-size: 13px; }
+</style>

@@ -1,0 +1,75 @@
+---
+import '../styles/global.css';
+import { SITE } from '../site.config';
+import { url } from '../lib/data';
+
+interface Props { title?: string; description?: string; image?: string }
+const { title, description = SITE.description, image } = Astro.props;
+const pageTitle = title ? `${title} · ${SITE.name}` : SITE.name;
+
+const nav = [
+  { n: '01', href: '/days', label: 'Ski days' },
+  { n: '02', href: '/numbers', label: 'Numbers' },
+  { n: '03', href: '/off-piste', label: 'Off-piste' },
+  { n: '04', href: '/about', label: 'About' },
+];
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const here = Astro.url.pathname.slice(base.length) || '/';
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    {image && <meta property="og:image" content={new URL(image, Astro.site)} />}
+    <link rel="icon" href={url('/favicon.svg')} type="image/svg+xml" />
+    <link rel="alternate" type="application/rss+xml" title={`${SITE.name}: ski days`} href={url('/rss.xml')} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600&family=JetBrains+Mono:wght@400&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="wrap bar">
+        <a class="name" href={url('/')}>{SITE.name}</a>
+        <nav aria-label="Main">
+          {nav.map((item) => (
+            <a href={url(item.href)} aria-current={here.startsWith(item.href) ? 'page' : undefined}>
+              <span>{item.n}</span> {item.label}
+            </a>
+          ))}
+        </nav>
+      </div>
+    </header>
+
+    <main><slot /></main>
+
+    <footer class="wrap">
+      <div class="site-footer">
+        <span>data by carv · bruises by gravity</span>
+        <span>no skis were harmed. several knees were.</span>
+      </div>
+    </footer>
+
+    <style>
+      .site-header { border-bottom: 1px solid var(--ink); }
+      .bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px 24px; padding-block: 22px; }
+      .name { font-weight: 600; font-size: 20px; letter-spacing: -0.02em; }
+      nav { display: flex; gap: 8px 24px; flex-wrap: wrap; font: 13px var(--mono); }
+      nav span { color: #888; }
+      nav a[aria-current='page'] { text-decoration: underline; text-underline-offset: 4px; }
+      .site-footer {
+        margin-top: 104px; padding-block: 28px 44px; border-top: 2px solid var(--ink);
+        display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+        font: 12px var(--mono); color: var(--muted);
+      }
+    </style>
+  </body>
+</html>

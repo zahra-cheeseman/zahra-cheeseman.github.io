@@ -1,0 +1,242 @@
+---
+import Base from '../layouts/Base.astro';
+import Stats from '../components/Stats.astro';
+import ResortMap from '../components/ResortMap.astro';
+import { SITE } from '../site.config';
+import { sessions, totals, resortVisits, resortName, getDays, url, fmt, pad, type Session } from '../lib/data';
+
+const days = await getDays();
+const diaryDates = new Set(days.map((d) => d.entry.id));
+const nextUp = ['nordkette', 'kuehtai', 'hintertux'].filter((k) => !resortVisits.some((v) => v.key === k)).map(resortName);
+
+// Progress charts: one small SVG line chart per metric, drawn at build time.
+const metrics: { key: keyof Session; label: string; unit: string; note: string; goodDown?: boolean }[] = [
+  { key: 'skiIQ', label: 'Ski:IQ', unit: '', note: 'Steady climb. Suspiciously steady.' },
+  { key: 'topSpeedKmh', label: 'Top speed', unit: 'km/h', note: 'Faster than a tram. Mostly on purpose.' },
+  { key: 'verticalM', label: 'Vertical', unit: 'm', note: 'More uphill lifts, more downhill me.' },
+  { key: 'falls', label: 'Falls', unit: '', note: 'The only chart where down is good.', goodDown: true },
+];
+const W = 800, H = 300;
+const charts = metrics.map((m) => {
+  const vals = sessions.map((s) => s[m.key] as number);
+  const lo = Math.min(...vals), hi = Math.max(...vals);
+  const pts = vals.map((v, i) => [
+    10 + (vals.length > 1 ? (i * (W - 20)) / (vals.length - 1) : (W - 20) / 2),
+    H - 30 - ((v - lo) / (hi - lo || 1)) * (H - 60),
+  ]);
+  const change = vals.length > 1 ? vals.at(-1)! - vals[0] : 0;
+  return {
+    ...m,
+    now: m.key === 'topSpeedKmh' ? fmt(vals.at(-1) ?? 0, 1) : fmt(vals.at(-1) ?? 0),
+    change: `${change >= 0 ? '+' : '−'}${fmt(Math.abs(change), m.key === 'topSpeedKmh' ? 1 : 0)} since day 1`,
+    pts: pts.map((p) => p.map((n) => n.toFixed(1)).join(',')).join(' '),
+    last: pts.at(-1) ?? [0, 0],
+  };
+});
+---
+<Base title="Numbers" description="Every day on skis, measured by Carv.">
+  <section class="wrap head">
+    <div>
+      <h1>Numbers</h1>
+      <p class="lede">Straight from Carv after every day.{SITE.useDemoData && <span class="label"> // demo data</span>}</p>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Numbers views" hidden>
+      <button role="tab" id="tab-overview" aria-controls="overview" aria-selected="true">Overview</button>
+      <button role="tab" id="tab-progress" aria-controls="progress" aria-selected="false">Progress</button>
+      <button role="tab" id="tab-daily" aria-controls="daily" aria-selected="false">Day by day</button>
+    </div>
+  </section>
+
+  <!-- OVERVIEW -->
+  <section id="overview" class="wrap panel" role="tabpanel" aria-labelledby="tab-overview">
+    <h2 class="panel-title">Overview</h2>
+    <Stats
+      cols={4}
+      size={72}
+      items={[
+        { label: 'Days on snow', value: totals.days, note: 'Plus recovery days, uncounted' },
+        { label: 'Runs', value: totals.runs, note: 'Bunny slope counted, repeatedly' },
+        { label: 'Time on skis', value: fmt(totals.hours, 1), unit: 'h', note: 'Excludes lunch. Lunch was long.' },
+        { label: 'Vertical', value: fmt(totals.verticalM), unit: 'm', note: `About ${fmt(totals.verticalM / 1700, 1)} Nordkettes` },
+        { label: 'Top speed', value: fmt(totals.topSpeedKmh, 1), unit: 'km/h', note: 'Personal best' },
+        { label: 'Ski:IQ', value: totals.skiIQ, note: totals.skiIQGain ? `Up ${totals.skiIQGain} since day 1` : 'Day 1 baseline' },
+        { label: 'Resorts', value: totals.resorts, note: 'See the map below' },
+        { label: 'Falls', value: totals.falls, note: 'Snow: softer than it looks' },
+      ]}
+    />
+
+    <div class="where">
+      <div class="section-head">
+        <h2>Where I've been</h2>
+        <span class="label">bigger dot = more days · hollow = not yet</span>
+      </div>
+      <div class="map-grid">
+        <ResortMap />
+        <div>
+          <ul class="visits">
+            {resortVisits.map((v) => <li><strong>{v.name}</strong><span class="mono">{v.days} day{v.days > 1 ? 's' : ''}</span></li>)}
+          </ul>
+          {nextUp.length > 0 && <p class="next">Next on the list: {nextUp.join(', ')}. Ambition outpacing ability, as usual.</p>}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROGRESS -->
+  <section id="progress" class="wrap panel" role="tabpanel" aria-labelledby="tab-progress">
+    <h2 class="panel-title">Progress</h2>
+    <div class="metric-buttons" hidden>
+      {charts.map((c, i) => <button type="button" data-metric={c.key} aria-pressed={i === 0 ? 'true' : 'false'}>{c.label}</button>)}
+    </div>
+    {charts.map((c) => (
+      <div class="chart" data-chart={c.key}>
+        <div class="chart-text">
+          <div class="big chart-now">{c.now}<span class="unit">{c.unit}</span></div>
+          <div class="label">{c.label} · {c.change}</div>
+          <p>{c.note}</p>
+        </div>
+        <figure>
+          <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${c.label} over ${sessions.length} days, now ${c.now}`}>
+            <line x1="0" y1={H - 10} x2={W} y2={H - 10} stroke="#111" />
+            <line x1="0" y1={H / 2} x2={W} y2={H / 2} stroke="#eee" />
+            <polyline points={c.pts} fill="none" stroke="#111" stroke-width="3" stroke-linejoin="round" />
+            <circle cx={c.last[0]} cy={c.last[1]} r="7" fill="#111" />
+          </svg>
+          <div class="axis label"><span>Day 1</span><span>Day {sessions.length}</span></div>
+        </figure>
+      </div>
+    ))}
+  </section>
+
+  <!-- DAY BY DAY -->
+  <section id="daily" class="wrap panel" role="tabpanel" aria-labelledby="tab-daily">
+    <h2 class="panel-title">Day by day</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Day</th><th>Where</th><th class="r">Ski:IQ</th><th class="r">Runs</th><th class="r">Vertical</th><th class="r">Top speed</th><th class="r">Falls</th></tr>
+        </thead>
+        <tbody>
+          {sessions.slice().reverse().map((s) => {
+            const n = pad(sessions.indexOf(s) + 1);
+            return (
+              <tr id={`day-${s.date}`}>
+                <td>
+                  {diaryDates.has(s.date)
+                    ? <a href={url(`/days/${s.date}`)} class="big day-n">{n}</a>
+                    : <span class="big day-n">{n}</span>}
+                  <span class="label">{s.date.slice(8, 10)}.{s.date.slice(5, 7)}</span>
+                </td>
+                <td>{resortName(s.resort)}</td>
+                <td class="r big iq">{s.skiIQ}</td>
+                <td class="r mono">{s.runs}</td>
+                <td class="r mono">{fmt(s.verticalM)} m</td>
+                <td class="r mono">{fmt(s.topSpeedKmh, 1)}</td>
+                <td class="r mono">{s.falls}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <script>
+    // Tabs (without JavaScript, all three sections simply show one after another).
+    const tablist = document.querySelector<HTMLElement>('.tabs')!;
+    const tabs = [...tablist.querySelectorAll<HTMLButtonElement>('[role=tab]')];
+    const panels = tabs.map((t) => document.getElementById(t.getAttribute('aria-controls')!)!);
+    tablist.hidden = false;
+    document.body.classList.add('js-tabs');
+    const select = (id: string) => {
+      tabs.forEach((t, i) => {
+        const on = t.getAttribute('aria-controls') === id;
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+        panels[i].hidden = !on;
+      });
+    };
+    tabs.forEach((t) => t.addEventListener('click', () => {
+      select(t.getAttribute('aria-controls')!);
+      history.replaceState(null, '', '#' + t.getAttribute('aria-controls'));
+    }));
+    tablist.addEventListener('keydown', (e) => {
+      const i = tabs.indexOf(document.activeElement as HTMLButtonElement);
+      if (i < 0 || !['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+      const next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+      next.focus(); next.click();
+    });
+
+    // Open the right tab from the link: #progress, #daily, or #day-2026-11-25 (highlights that row)
+    const fromHash = () => {
+      const hash = location.hash.slice(1);
+      document.querySelectorAll('tr.hl').forEach((r) => r.classList.remove('hl'));
+      if (hash.startsWith('day-')) {
+        select('daily');
+        const row = document.getElementById(hash);
+        if (row) { row.classList.add('hl'); row.scrollIntoView({ block: 'center' }); }
+      } else select(['overview', 'progress', 'daily'].includes(hash) ? hash : 'overview');
+    };
+    fromHash();
+    addEventListener('hashchange', fromHash);
+
+    // Progress metric switcher
+    const btns = [...document.querySelectorAll<HTMLButtonElement>('[data-metric]')];
+    const charts = [...document.querySelectorAll<HTMLElement>('[data-chart]')];
+    document.querySelector<HTMLElement>('.metric-buttons')!.hidden = false;
+    const show = (k: string) => {
+      btns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.metric === k)));
+      charts.forEach((c) => (c.hidden = c.dataset.chart !== k));
+    };
+    btns.forEach((b) => b.addEventListener('click', () => show(b.dataset.metric!)));
+    show(btns[0].dataset.metric!);
+  </script>
+
+  <style>
+    .head { padding-block: 72px 40px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 24px; }
+    .lede { margin: 16px 0 0; }
+    .tabs { display: flex; border: 1px solid var(--ink); }
+    .tabs button, .metric-buttons button {
+      font: 13px var(--mono); background: #fff; color: var(--ink); border: 0; padding: 10px 16px; min-height: 44px; cursor: pointer;
+    }
+    .tabs button + button { border-left: 1px solid var(--ink); }
+    .tabs button[aria-selected='true'], .metric-buttons button[aria-pressed='true'] { background: var(--ink); color: #fff; }
+    .panel { margin-bottom: 72px; }
+    .panel-title { margin-bottom: 16px; }
+    :global(.js-tabs) .panel-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+    .where { margin-top: 80px; }
+    .map-grid { display: grid; grid-template-columns: 3fr 1fr; gap: 32px; margin-top: 24px; }
+    .visits { list-style: none; padding: 0; margin: 0; }
+    .visits li { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+    .visits .mono { font-size: 13px; }
+    .next { font-size: 15px; color: var(--muted); }
+
+    .metric-buttons { display: flex; flex-wrap: wrap; gap: 8px; border-top: 2px solid var(--ink); padding-top: 24px; }
+    .metric-buttons button { border: 1px solid var(--ink); }
+    .chart { display: grid; grid-template-columns: 1fr 2fr; gap: 32px; align-items: end; margin-top: 40px; }
+    .chart[hidden] { display: none; }
+    .chart-now { font-size: clamp(96px, 14vw, 200px); line-height: 0.8; letter-spacing: -0.06em; }
+    .chart-now .unit { font-size: 0.16em; letter-spacing: 0; margin-left: 6px; }
+    .chart-text .label { font-size: 13px; color: var(--ink); margin-top: 20px; }
+    .chart-text p { font-size: 19px; color: #333; margin: 12px 0 0; }
+    figure { margin: 0; }
+    svg { width: 100%; height: auto; display: block; }
+    .axis { display: flex; justify-content: space-between; margin-top: 8px; }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 760px; }
+    th { text-align: left; font: 400 12px var(--mono); color: var(--muted); padding: 12px 8px; border-top: 2px solid var(--ink); border-bottom: 1px solid var(--ink); }
+    td { padding: 14px 8px; border-bottom: 1px solid var(--line); font-size: 17px; }
+    th:first-child, td:first-child { padding-left: 0; }
+    .r { text-align: right; }
+    td.mono { font-size: 14px; }
+    .day-n { font-size: 28px; margin-right: 10px; }
+    a.day-n { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+    .iq { font-size: 26px; }
+    tr.hl td { background: #f2f2f2; }
+    @media (max-width: 760px) {
+      .map-grid, .chart { grid-template-columns: 1fr; }
+    }
+  </style>
+</Base>

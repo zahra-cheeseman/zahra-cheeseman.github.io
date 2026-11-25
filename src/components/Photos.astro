@@ -1,0 +1,78 @@
+---
+// Photo grid + full-screen viewer (arrow keys, swipe, Esc).
+import type { Photo } from '../lib/photos';
+interface Props { photos: Photo[] }
+const { photos } = Astro.props;
+---
+{photos.length > 0 && (
+  <div class="photos" data-photos>
+    <div class="grid">
+      {photos.map((p, i) => (
+        <button type="button" class="tile" data-full={p.full} data-alt={p.alt} aria-label={`Open photo ${i + 1} of ${photos.length}`}>
+          <img src={p.thumb} alt={p.alt} loading="lazy" decoding="async" />
+        </button>
+      ))}
+    </div>
+    <p class="label hint">{photos.length} photo{photos.length > 1 ? 's' : ''} · tap one to open full screen</p>
+
+    <dialog class="viewer" aria-label="Photo viewer">
+      <img alt="" />
+      <p class="label caption"></p>
+      <button type="button" class="close" aria-label="Close">Close ✕</button>
+      <button type="button" class="prev" aria-label="Previous photo">←</button>
+      <button type="button" class="next" aria-label="Next photo">→</button>
+    </dialog>
+  </div>
+)}
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-photos]').forEach((root) => {
+    const dlg = root.querySelector('dialog')!;
+    const img = dlg.querySelector('img')!;
+    const cap = dlg.querySelector('.caption')!;
+    const tiles = [...root.querySelectorAll<HTMLElement>('.tile')];
+    let i = 0;
+    const show = (n: number) => {
+      i = (n + tiles.length) % tiles.length;
+      img.src = tiles[i].dataset.full!;
+      img.alt = tiles[i].dataset.alt || '';
+      cap.textContent = `${i + 1} / ${tiles.length}${tiles[i].dataset.alt ? ' · ' + tiles[i].dataset.alt : ''}`;
+    };
+    tiles.forEach((t, n) => t.addEventListener('click', () => { show(n); dlg.showModal(); }));
+    dlg.querySelector('.prev')!.addEventListener('click', () => show(i - 1));
+    dlg.querySelector('.next')!.addEventListener('click', () => show(i + 1));
+    dlg.querySelector('.close')!.addEventListener('click', () => dlg.close());
+    dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+    dlg.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') show(i - 1);
+      if (e.key === 'ArrowRight') show(i + 1);
+    });
+    let x0 = 0;
+    dlg.addEventListener('touchstart', (e) => (x0 = e.touches[0].clientX), { passive: true });
+    dlg.addEventListener('touchend', (e) => {
+      const dx = e.changedTouches[0].clientX - x0;
+      if (Math.abs(dx) > 50) show(i + (dx < 0 ? 1 : -1));
+    });
+  });
+</script>
+
+<style>
+  .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .tile { border: 0; padding: 0; background: #eee; cursor: zoom-in; aspect-ratio: 4 / 5; overflow: hidden; }
+  .tile img { width: 100%; height: 100%; object-fit: cover; transition: opacity 0.2s; }
+  .tile:hover img { opacity: 0.85; }
+  .hint { margin-top: 10px; }
+  @media (max-width: 600px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+  .viewer {
+    width: 100vw; height: 100vh; max-width: none; max-height: none; margin: 0; border: 0; padding: 24px;
+    background: #fff; color: var(--ink);
+  }
+  .viewer[open] { display: grid; grid-template-rows: 1fr auto; place-items: center; }
+  .viewer::backdrop { background: #fff; }
+  .viewer img { max-width: 100%; max-height: calc(100vh - 110px); object-fit: contain; }
+  .viewer button { position: absolute; background: #fff; border: 1px solid var(--ink); font: 14px var(--mono); min-width: 48px; height: 48px; cursor: pointer; padding: 0 14px; }
+  .close { top: 20px; right: 20px; }
+  .prev { left: 20px; top: 50%; }
+  .next { right: 20px; top: 50%; }
+</style>

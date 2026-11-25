@@ -1,0 +1,29 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE } from '../site.config';
+import { url } from '../lib/data';
+---
+<Base title="About">
+  <article class="wrap narrow">
+    <h1>About</h1>
+    <div class="text">
+      <p>Hi, I'm {SITE.author}. In November 2026 I moved to Innsbruck and, having never skied, decided the sensible thing was to learn in public.</p>
+      <p>Every day on snow I wear <a href="https://getcarv.com" class="underline">Carv</a>, which measures every turn and gives me a Ski:IQ score. This site is the diary, the data, and the occasional Kaiserschmarrn review.</p>
+      <p><em>[Replace this with your own words: why Innsbruck, why skiing, where you hope to be by the end of the season.]</em></p>
+    </div>
+    <dl class="facts rule">
+      <div><dt class="label">Season goal</dt><dd>A red run, top to bottom, no stops</dd></div>
+      <div><dt class="label">Built with</dt><dd>Astro · GitHub Pages</dd></div>
+      <div><dt class="label">Updates</dt><dd><a href={url('/rss.xml')} class="underline">RSS</a> or the email signup</dd></div>
+    </dl>
+  </article>
+
+  <style>
+    article { padding-top: 80px; }
+    .text { font-size: 20px; line-height: 1.65; color: #222; margin-top: 40px; }
+    .text p { margin: 0 0 22px; }
+    .facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 48px; padding-top: 16px; }
+    dd { margin: 4px 0 0; font-weight: 600; font-size: 19px; letter-spacing: -0.01em; }
+    @media (max-width: 600px) { .facts { grid-template-columns: 1fr; } }
+  </style>
+</Base>
