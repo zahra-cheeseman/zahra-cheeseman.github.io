@@ -14,5 +14,5 @@ export const SITE = {
 
   // Show made-up numbers so the Numbers page looks full while you get started.
   // Set to false once you have a few real days in src/data/sessions.json.
-  useDemoData: true,
+  useDemoData: false,
 };
