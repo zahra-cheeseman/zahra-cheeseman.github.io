@@ -1,11 +1,10 @@
-/* Piste of Mind: white, black, Inter Tight semibold, JetBrains Mono for labels. */
+/* Piste of Mind: white, black, Inter Tight throughout. */
 :root {
   --ink: #111;
   --muted: #555;
   --line: #ddd;
   --bg: #fff;
   --sans: 'Inter Tight', system-ui, sans-serif;
-  --mono: 'JetBrains Mono', ui-monospace, monospace;
   --wrap: 1200px;
   --gutter: clamp(20px, 4vw, 32px);
 }
@@ -30,15 +29,15 @@ h2 { font-size: clamp(30px, 4vw, 44px); line-height: 1; letter-spacing: -0.035em
 
 .wrap { max-width: var(--wrap); margin: 0 auto; padding-inline: var(--gutter); }
 .narrow { max-width: 880px; }
-.mono { font-family: var(--mono); }
-.label { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.mono { font-variant-numeric: tabular-nums; }
+.label { font-family: var(--sans); font-size: 12px; color: var(--muted); }
 .big { font-weight: 600; letter-spacing: -0.045em; line-height: 1; }
 .lede { font-size: clamp(18px, 2vw, 22px); color: #333; max-width: 620px; }
 .rule { border-top: 2px solid var(--ink); }
 .underline { border-bottom: 1px solid var(--ink); padding-bottom: 1px; }
 
 .btn {
-  display: inline-block; font: 13px var(--mono);
+  display: inline-block; font: 13px var(--sans);
   background: var(--ink); color: #fff; padding: 13px 18px; border: 0; cursor: pointer;
 }
 .btn:hover { color: #fff; background: #333; }
